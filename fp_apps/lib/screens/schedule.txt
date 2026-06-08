@@ -1,0 +1,268 @@
+// ================= SCHEDULE PAGE =================
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class SchedulePage extends StatefulWidget {
+  const SchedulePage({super.key});
+
+  @override
+  State<SchedulePage> createState() =>
+      _SchedulePageState();
+}
+
+class _SchedulePageState
+    extends State<SchedulePage> {
+
+  final supabase =
+      Supabase.instance.client;
+
+  final TextEditingController
+      subjectController =
+      TextEditingController();
+
+  final TextEditingController
+      dayController =
+      TextEditingController();
+
+  final TextEditingController
+      startTimeController =
+      TextEditingController();
+
+  final TextEditingController
+      endTimeController =
+      TextEditingController();
+
+  final TextEditingController
+      roomController =
+      TextEditingController();
+
+  Future<void> addSchedule() async {
+
+    final user =
+        supabase.auth.currentUser;
+
+    if (user == null) return;
+
+    await supabase.from(
+      'schedules',
+    ).insert({
+
+      'user_id': user.id,
+
+      'subject':
+          subjectController.text,
+
+      'day': dayController.text,
+
+      'start_time':
+          startTimeController.text,
+
+      'end_time':
+          endTimeController.text,
+
+      'room':
+          roomController.text,
+    });
+
+    subjectController.clear();
+    dayController.clear();
+    startTimeController.clear();
+    endTimeController.clear();
+    roomController.clear();
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+
+      const SnackBar(
+        content:
+            Text("Schedule Added"),
+      ),
+    );
+
+    Future<void> fetchSchedules() async {
+      final user = supabase.auth.currentUser;
+      
+      if (user == null) return;
+      
+      final data = await supabase
+      .from('schedules')
+      .select()
+      .eq('user_id', user.id);
+      
+      setState(() {
+        schedules = data;
+      });
+
+      @override
+      void initState() {
+        super.initState();
+        fetchSchedules();
+      }
+
+      await supabase.from(
+        'schedules',
+      ).insert({
+        
+        'user_id': user.id,
+        'subject':
+          subjectController.text,
+        'day': dayController.text,
+        'start_time':
+          startTimeController.text,
+        'end_time':
+          endTimeController.text,
+        'room':
+          roomController.text,
+      });
+      await fetchSchedules();
+    }
+  }
+
+  List schedules = [];
+
+  @override
+  Widget build(BuildContext context) {
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+
+      child: Column(
+        children: [
+
+          TextField(
+            controller:
+                subjectController,
+
+            decoration:
+                const InputDecoration(
+              labelText: "Subject",
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          TextField(
+            controller: dayController,
+
+            decoration:
+                const InputDecoration(
+              labelText: "Day",
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          TextField(
+            controller:
+                startTimeController,
+
+            decoration:
+                const InputDecoration(
+              labelText:
+                  "Start Time",
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          TextField(
+            controller:
+                endTimeController,
+
+            decoration:
+                const InputDecoration(
+              labelText:
+                  "End Time",
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          TextField(
+            controller:
+                roomController,
+
+            decoration:
+                const InputDecoration(
+              labelText: "Room",
+            ),
+          ),
+
+          const SizedBox(height: 30),
+
+          SizedBox(
+            width: double.infinity,
+            height: 55,
+
+            child: ElevatedButton(
+              onPressed: addSchedule,
+
+              child: const Text(
+                "Add Schedule",
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 30),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: schedules.length,
+            itemBuilder: (context, index) {
+              
+              final schedule = schedules[index];
+              
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(16),
+                
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                
+                child: Column(
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
+                  
+                  children: [
+                    Text(
+                      schedule['subject'],
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 8),
+                    
+                    Text(
+                      "${schedule['day']} | ${schedule['start_time']} - ${schedule['end_time']}",
+                    ),
+                    
+                    const SizedBox(height: 4),
+                    
+                    Text(
+                      "Room: ${schedule['room']}",
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+url: 'https://ejwkjdsqnerfxzweoryc.supabase.co',
+    anonKey: 'sb_publishable_QchuDqnKXtAkQIMMNOHKCw_pg1XR0SB',
